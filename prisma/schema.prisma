@@ -1,0 +1,395 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  END_USER
+  DRIVER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_RIDE
+  OFFLINE
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  VAN
+  SPRINTER
+  STRETCH_LIMO
+}
+
+enum RideType {
+  TO_AIRPORT
+  FROM_AIRPORT
+  HOURLY
+}
+
+enum PricingModel {
+  FLAT_RATE   // Fixed price regardless of distance
+  PER_MILE    // base + (miles × perUnitPrice)
+  PER_KM      // base + (km × perUnitPrice)
+  HOURLY      // base + (hours × perUnitPrice), subject to minimumHours
+}
+
+enum BookingStatus {
+  PENDING     // Created, payment not yet confirmed
+  CONFIRMED   // Payment succeeded, driver not yet assigned
+  IN_PROGRESS // Driver started the ride
+  COMPLETED   // Ride finished
+  CANCELLED   // Cancelled by user or admin
+}
+
+enum RideStatus {
+  EN_ROUTE_TO_PICKUP // Driver heading to pickup
+  ARRIVED            // Driver at pickup location
+  IN_PROGRESS        // Passenger on board
+  COMPLETED          // Ride finished
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum GeoRestrictionType {
+  STATE   // { "states": ["TX", "OK"] }
+  RADIUS  // { "lat": 29.76, "lng": -95.36, "km": 150 }
+  POLYGON // { "coordinates": [[lng, lat], ...] }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANT
+// One record per limo company. The slug becomes the subdomain.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Identity & branding
+  name         String  @db.VarChar(255)
+  slug         String  @unique @db.VarChar(100) // e.g. "luxride" → luxride.limoportal.com
+  logoUrl      String?
+  primaryColor String? @default("#C9A84C") @db.VarChar(7) // hex colour
+
+  // Stripe Connect
+  stripeAccountId   String?  @unique
+  stripeOnboarded   Boolean  @default(false)
+
+  // Geographic service restrictions
+  geoRestrictionEnabled Boolean              @default(false)
+  geoRestrictionType    GeoRestrictionType?
+  geoRestrictionValue   Json?                // See GeoRestrictionType enum comments
+
+  // Status
+  active Boolean @default(true)
+
+  // Relations
+  users        User[]
+  vehicles     Vehicle[]
+  pricingRules PricingRule[]
+  bookings     Booking[]
+  payments     Payment[]
+  driverProfiles DriverProfile[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER
+// Single table for all roles. tenantId is NULL for super admins.
+// id must match the Supabase auth.users id (UUID).
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id // Matches Supabase auth.users.id
+  createdAt DateTime @default(now())
+
+  tenantId String?
+  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  email     String  @unique @db.VarChar(320)
+  phone     String? @db.VarChar(30)
+  firstName String? @db.VarChar(100)
+  lastName  String? @db.VarChar(100)
+  avatarUrl String?
+  role      UserRole @default(END_USER)
+  isGuest   Boolean  @default(false)
+
+  // Stripe customer ID (for saved payment methods)
+  stripeCustomerId String? @unique
+
+  // Relations
+  driverProfile  DriverProfile?
+  bookingsAsUser Booking[]      @relation("UserBookings")
+  bookingsAsDriver Booking[]    @relation("DriverBookings")
+  reviews        Review[]
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRIVER PROFILE
+// Extended fields for users with role DRIVER.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model DriverProfile {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  licenseNumber String? @db.VarChar(100)
+  licenseExpiry DateTime? @db.Date
+
+  // Real-time location (updated every ~10s while on a ride)
+  status     DriverStatus @default(OFFLINE)
+  currentLat Decimal?     @db.Decimal(10, 8)
+  currentLng Decimal?     @db.Decimal(11, 8)
+
+  // Aggregate metrics
+  rating     Decimal? @db.Decimal(3, 2) // 1.00 – 5.00
+  totalRides Int      @default(0)
+
+  @@unique([userId, tenantId])
+  @@index([tenantId, status])
+  @@map("driver_profiles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VEHICLE
+// Fleet inventory per tenant.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name         String      @db.VarChar(255)
+  type         VehicleType
+  make         String?     @db.VarChar(100) // e.g. "Cadillac"
+  model        String?     @db.VarChar(100) // e.g. "CT6"
+  year         Int?
+  capacity     Int                         // Max passengers
+  licensePlate String?     @db.VarChar(20)
+  color        String?     @db.VarChar(50)
+  photos       String[]                    // Array of Supabase Storage URLs
+  amenities    Json        @default("{}")  // e.g. { "wifi": true, "childSeat": false }
+  active       Boolean     @default(true)
+
+  // Relations
+  pricingRules PricingRule[]
+  bookings     Booking[]
+
+  @@index([tenantId])
+  @@map("vehicles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRICING RULE
+// Defines how fares are calculated. Specificity: vehicleId > vehicleType > catch-all.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PricingRule {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Scope: specific vehicle > vehicle type > all vehicles (both null)
+  vehicleId   String?
+  vehicle     Vehicle?    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleType VehicleType?
+
+  rideType     RideType
+  pricingModel PricingModel
+
+  basePrice    Decimal  @db.Decimal(10, 2) // Minimum charge / base fare
+  perUnitPrice Decimal? @db.Decimal(10, 4) // Per mile, km, or hour
+  minimumHours Decimal? @db.Decimal(4, 2)  // Minimum billable hours (hourly rides)
+  currency     String   @default("USD")    @db.Char(3)
+  active       Boolean  @default(true)
+
+  @@index([tenantId])
+  @@map("pricing_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOOKING
+// Core transactional record. Created before payment; confirmed via webhook.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Booking {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  userId String
+  user   User   @relation("UserBookings", fields: [userId], references: [id])
+
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  // Assigned after booking is confirmed
+  driverId String?
+  driver   User?   @relation("DriverBookings", fields: [driverId], references: [id])
+
+  // Ride details
+  rideType       RideType
+  status         BookingStatus @default(PENDING)
+  scheduledAt    DateTime
+
+  // Pickup
+  pickupAddress String
+  pickupLat     Decimal @db.Decimal(10, 8)
+  pickupLng     Decimal @db.Decimal(11, 8)
+
+  // Dropoff (null for hourly rides)
+  dropoffAddress String?
+  dropoffLat     Decimal? @db.Decimal(10, 8)
+  dropoffLng     Decimal? @db.Decimal(11, 8)
+
+  // Calculated at quote time
+  durationHours  Decimal? @db.Decimal(4, 2)  // For hourly bookings
+  distanceKm     Decimal? @db.Decimal(10, 4)
+
+  // Pricing
+  quotedPrice Decimal  @db.Decimal(10, 2) // Locked at booking creation
+  finalPrice  Decimal? @db.Decimal(10, 2) // Set at completion (may differ for hourly)
+  currency    String   @default("USD") @db.Char(3)
+
+  // Passenger info
+  passengerCount Int?
+  notes          String? @db.Text
+
+  // Relations
+  ride    Ride?
+  payment Payment?
+  review  Review?
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([driverId])
+  @@index([tenantId, status])
+  @@index([scheduledAt])
+  @@map("bookings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RIDE
+// One-to-one with Booking. Tracks the live execution of a trip.
+// Created when the driver taps "Start Ride".
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Ride {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  driverId String
+  driver   User   @relation(fields: [driverId], references: [id])
+
+  status RideStatus @default(EN_ROUTE_TO_PICKUP)
+
+  startedAt   DateTime? // Driver tapped "Start Ride"
+  arrivedAt   DateTime? // Driver tapped "Arrived at Pickup"
+  completedAt DateTime? // Driver tapped "Complete Ride"
+
+  actualDistanceKm Decimal? @db.Decimal(10, 4)
+  routePolyline    String?  @db.Text // Encoded Google Maps polyline
+  driverNotes      String?  @db.Text
+
+  @@map("rides")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT
+// Tracks Stripe PaymentIntent lifecycle for each booking.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Payment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  // Stripe IDs
+  stripePaymentIntentId String  @unique
+  stripeChargeId        String? @unique
+
+  // Amounts (in major currency units, e.g. 85.00 USD)
+  amount        Decimal  @db.Decimal(10, 2) // Total charged
+  platformFee   Decimal? @db.Decimal(10, 2) // 5% kept by LimoPortal
+  tenantPayout  Decimal? @db.Decimal(10, 2) // Remainder transferred to tenant
+  currency      String   @default("USD") @db.Char(3)
+
+  status PaymentStatus @default(PENDING)
+
+  // Refund tracking
+  refundAmount Decimal? @db.Decimal(10, 2)
+  refundReason String?  @db.Text
+
+  @@index([tenantId])
+  @@index([stripePaymentIntentId])
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REVIEW
+// Post-ride rating. One review per completed booking.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  driverId String?
+
+  vehicleRating Int? // 1–5
+  driverRating  Int? // 1–5
+  comment       String? @db.Text
+
+  @@map("reviews")
+}
