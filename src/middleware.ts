@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
 
 function getTenantSlug(hostname: string) {
-  
-    console.log("Hostname:", ROOT_DOMAIN);
+  console.log("Hostname:", ROOT_DOMAIN);
   if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}`) return null;
 
   const subdomain = hostname
@@ -16,25 +15,50 @@ function getTenantSlug(hostname: string) {
   return subdomain;
 }
 
-export default withAuth(
+const PUBLIC_PATHS = ["/", "/auth"];
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+}
+
+const authMiddleware = withAuth(
   async function middleware(request: NextRequest) {
-    const hostname = request.headers.get("host") ?? "";
-    console.log("Hostname:", hostname);
-    const tenantSlug = getTenantSlug(hostname);
-    console.log("Tenant Slug:", tenantSlug);
-
-    const res = NextResponse.next();
-
-    if (tenantSlug) {
-      res.cookies.set("x-tenant-slug", tenantSlug);
-    }
-
-    return res;
+    return NextResponse.next();
   },
   {
     publicPaths: ["/", "/auth/:path*"],
   }
 );
+
+export default async function middleware(request: NextRequest) {
+  const hostname = request.headers.get("host") ?? "";
+  const tenantSlug = getTenantSlug(hostname);
+  const { pathname } = request.nextUrl;
+
+  if (isPublicPath(pathname)) {
+    const res = NextResponse.next();
+    if (tenantSlug) {
+      res.cookies.set("x-tenant-slug", tenantSlug, {
+        path: "/",
+        sameSite: "lax",
+      });
+    }
+    return res;
+  }
+
+  const authResponse = await (authMiddleware as any)(request, {} as any);
+
+  if (tenantSlug && authResponse) {
+    authResponse.cookies.set("x-tenant-slug", tenantSlug, {
+      path: "/",
+      sameSite: "lax",
+    });
+  }
+
+  return authResponse;
+}
 
 export const config = {
   matcher: [
