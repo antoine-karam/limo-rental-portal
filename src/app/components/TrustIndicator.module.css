@@ -1,0 +1,35 @@
+.trustSection {
+  padding: 3rem 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background-color: rgba(17, 24, 39, 0.5);
+}
+
+.trustGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .trustGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.trustItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.trustIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.trustText {
+  color: var(--color-foreground);
+  font-weight: var(--font-weight-medium);
+}

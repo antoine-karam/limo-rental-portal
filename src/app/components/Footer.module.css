@@ -1,0 +1,38 @@
+
+.footer {
+  padding: 3rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.footerContent {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerText {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.footerLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.footerLink {
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+.footerLink:hover {
+  color: #B89320;
+}
+
+.footerDivider {
+  color: var(--color-text-muted);
+}

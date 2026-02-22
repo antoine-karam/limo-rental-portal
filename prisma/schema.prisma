@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -35,25 +35,25 @@ enum RideType {
 }
 
 enum PricingModel {
-  FLAT_RATE   // Fixed price regardless of distance
-  PER_MILE    // base + (miles × perUnitPrice)
-  PER_KM      // base + (km × perUnitPrice)
-  HOURLY      // base + (hours × perUnitPrice), subject to minimumHours
+  FLAT_RATE // Fixed price regardless of distance
+  PER_MILE // base + (miles × perUnitPrice)
+  PER_KM // base + (km × perUnitPrice)
+  HOURLY // base + (hours × perUnitPrice), subject to minimumHours
 }
 
 enum BookingStatus {
-  PENDING     // Created, payment not yet confirmed
-  CONFIRMED   // Payment succeeded, driver not yet assigned
+  PENDING // Created, payment not yet confirmed
+  CONFIRMED // Payment succeeded, driver not yet assigned
   IN_PROGRESS // Driver started the ride
-  COMPLETED   // Ride finished
-  CANCELLED   // Cancelled by user or admin
+  COMPLETED // Ride finished
+  CANCELLED // Cancelled by user or admin
 }
 
 enum RideStatus {
   EN_ROUTE_TO_PICKUP // Driver heading to pickup
-  ARRIVED            // Driver at pickup location
-  IN_PROGRESS        // Passenger on board
-  COMPLETED          // Ride finished
+  ARRIVED // Driver at pickup location
+  IN_PROGRESS // Passenger on board
+  COMPLETED // Ride finished
 }
 
 enum PaymentStatus {
@@ -64,8 +64,8 @@ enum PaymentStatus {
 }
 
 enum GeoRestrictionType {
-  STATE   // { "states": ["TX", "OK"] }
-  RADIUS  // { "lat": 29.76, "lng": -95.36, "km": 150 }
+  STATE // { "states": ["TX", "OK"] }
+  RADIUS // { "lat": 29.76, "lng": -95.36, "km": 150 }
   POLYGON // { "coordinates": [[lng, lat], ...] }
 }
 
@@ -86,23 +86,23 @@ model Tenant {
   primaryColor String? @default("#C9A84C") @db.VarChar(7) // hex colour
 
   // Stripe Connect
-  stripeAccountId   String?  @unique
-  stripeOnboarded   Boolean  @default(false)
+  stripeAccountId String? @unique
+  stripeOnboarded Boolean @default(false)
 
   // Geographic service restrictions
-  geoRestrictionEnabled Boolean              @default(false)
+  geoRestrictionEnabled Boolean             @default(false)
   geoRestrictionType    GeoRestrictionType?
-  geoRestrictionValue   Json?                // See GeoRestrictionType enum comments
+  geoRestrictionValue   Json? // See GeoRestrictionType enum comments
 
   // Status
   active Boolean @default(true)
 
   // Relations
-  users        User[]
-  vehicles     Vehicle[]
-  pricingRules PricingRule[]
-  bookings     Booking[]
-  payments     Payment[]
+  users          User[]
+  vehicles       Vehicle[]
+  pricingRules   PricingRule[]
+  bookings       Booking[]
+  payments       Payment[]
   driverProfiles DriverProfile[]
 
   @@map("tenants")
@@ -119,12 +119,12 @@ model User {
   createdAt DateTime @default(now())
 
   tenantId String?
-  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
-  email     String  @unique @db.VarChar(320)
-  phone     String? @db.VarChar(30)
-  firstName String? @db.VarChar(100)
-  lastName  String? @db.VarChar(100)
+  email     String   @unique @db.VarChar(320)
+  phone     String?  @db.VarChar(30)
+  firstName String?  @db.VarChar(100)
+  lastName  String?  @db.VarChar(100)
   avatarUrl String?
   role      UserRole @default(END_USER)
   isGuest   Boolean  @default(false)
@@ -133,10 +133,11 @@ model User {
   stripeCustomerId String? @unique
 
   // Relations
-  driverProfile  DriverProfile?
-  bookingsAsUser Booking[]      @relation("UserBookings")
-  bookingsAsDriver Booking[]    @relation("DriverBookings")
-  reviews        Review[]
+  driverProfile    DriverProfile?
+  bookingsAsUser   Booking[]      @relation("UserBookings")
+  bookingsAsDriver Booking[]      @relation("DriverBookings")
+  reviews          Review[]
+  rides            Ride[]
 
   @@index([tenantId])
   @@map("users")
@@ -152,13 +153,13 @@ model DriverProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId   String @unique
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  licenseNumber String? @db.VarChar(100)
+  licenseNumber String?   @db.VarChar(100)
   licenseExpiry DateTime? @db.Date
 
   // Real-time location (updated every ~10s while on a ride)
@@ -193,11 +194,11 @@ model Vehicle {
   make         String?     @db.VarChar(100) // e.g. "Cadillac"
   model        String?     @db.VarChar(100) // e.g. "CT6"
   year         Int?
-  capacity     Int                         // Max passengers
+  capacity     Int // Max passengers
   licensePlate String?     @db.VarChar(20)
   color        String?     @db.VarChar(50)
-  photos       String[]                    // Array of Supabase Storage URLs
-  amenities    Json        @default("{}")  // e.g. { "wifi": true, "childSeat": false }
+  photos       String[] // Array of Supabase Storage URLs
+  amenities    Json        @default("{}") // e.g. { "wifi": true, "childSeat": false }
   active       Boolean     @default(true)
 
   // Relations
@@ -223,7 +224,7 @@ model PricingRule {
 
   // Scope: specific vehicle > vehicle type > all vehicles (both null)
   vehicleId   String?
-  vehicle     Vehicle?    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicle     Vehicle?     @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   vehicleType VehicleType?
 
   rideType     RideType
@@ -231,8 +232,8 @@ model PricingRule {
 
   basePrice    Decimal  @db.Decimal(10, 2) // Minimum charge / base fare
   perUnitPrice Decimal? @db.Decimal(10, 4) // Per mile, km, or hour
-  minimumHours Decimal? @db.Decimal(4, 2)  // Minimum billable hours (hourly rides)
-  currency     String   @default("USD")    @db.Char(3)
+  minimumHours Decimal? @db.Decimal(4, 2) // Minimum billable hours (hourly rides)
+  currency     String   @default("USD") @db.Char(3)
   active       Boolean  @default(true)
 
   @@index([tenantId])
@@ -263,9 +264,9 @@ model Booking {
   driver   User?   @relation("DriverBookings", fields: [driverId], references: [id])
 
   // Ride details
-  rideType       RideType
-  status         BookingStatus @default(PENDING)
-  scheduledAt    DateTime
+  rideType    RideType
+  status      BookingStatus @default(PENDING)
+  scheduledAt DateTime
 
   // Pickup
   pickupAddress String
@@ -278,8 +279,8 @@ model Booking {
   dropoffLng     Decimal? @db.Decimal(11, 8)
 
   // Calculated at quote time
-  durationHours  Decimal? @db.Decimal(4, 2)  // For hourly bookings
-  distanceKm     Decimal? @db.Decimal(10, 4)
+  durationHours Decimal? @db.Decimal(4, 2) // For hourly bookings
+  distanceKm    Decimal? @db.Decimal(10, 4)
 
   // Pricing
   quotedPrice Decimal  @db.Decimal(10, 2) // Locked at booking creation
@@ -354,10 +355,10 @@ model Payment {
   stripeChargeId        String? @unique
 
   // Amounts (in major currency units, e.g. 85.00 USD)
-  amount        Decimal  @db.Decimal(10, 2) // Total charged
-  platformFee   Decimal? @db.Decimal(10, 2) // 5% kept by LimoPortal
-  tenantPayout  Decimal? @db.Decimal(10, 2) // Remainder transferred to tenant
-  currency      String   @default("USD") @db.Char(3)
+  amount       Decimal  @db.Decimal(10, 2) // Total charged
+  platformFee  Decimal? @db.Decimal(10, 2) // 5% kept by LimoPortal
+  tenantPayout Decimal? @db.Decimal(10, 2) // Remainder transferred to tenant
+  currency     String   @default("USD") @db.Char(3)
 
   status PaymentStatus @default(PENDING)
 

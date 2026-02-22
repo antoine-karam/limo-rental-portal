@@ -1,0 +1,27 @@
+
+.ctaSection {
+  padding: 6rem 0;
+  background-color: rgba(17, 24, 39, 0.5);
+}
+
+.ctaContent {
+  max-width: 48rem;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ctaTitle {
+  font-size: 2.25rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.ctaDescription {
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
