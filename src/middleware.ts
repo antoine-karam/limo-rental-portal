@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
 
 function getTenantSlug(hostname: string) {
+  
+    console.log("Hostname:", ROOT_DOMAIN);
   if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}`) return null;
 
   const subdomain = hostname
@@ -17,7 +19,9 @@ function getTenantSlug(hostname: string) {
 export default withAuth(
   async function middleware(request: NextRequest) {
     const hostname = request.headers.get("host") ?? "";
+    console.log("Hostname:", hostname);
     const tenantSlug = getTenantSlug(hostname);
+    console.log("Tenant Slug:", tenantSlug);
 
     const res = NextResponse.next();
 
