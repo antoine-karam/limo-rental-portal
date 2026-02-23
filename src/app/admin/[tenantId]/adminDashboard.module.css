@@ -1,0 +1,190 @@
+.header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.header h1 {
+  font-size: 1.875rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: var(--color-muted-foreground);
+}
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 1024px) {
+  .metricsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.statCard {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: border-color var(--transition-normal);
+}
+
+.statCard:hover {
+  border-color: var(--color-border-hover);
+}
+
+.statCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.statCardHeader h3 {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.statCardHeader svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.iconSuccess {
+  color: var(--color-success);
+}
+
+.iconPrimary {
+  color: var(--color-primary);
+}
+
+.statValue {
+  font-size: 1.875rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.statChangePositive {
+  font-size: 0.875rem;
+  color: var(--color-success);
+}
+
+.statChangeMuted {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+}
+
+.statEmoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* ── Bookings Table Card ── */
+.tableCard {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.tableCardHeader {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tableCardHeader h2 {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* ── Table ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-muted-foreground);
+}
+
+.table th:last-child {
+  text-align: right;
+}
+
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cellId {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.cellPrimary {
+  color: var(--color-text-primary);
+}
+
+.cellMuted {
+  color: var(--color-muted-foreground);
+}
+
+.cellTime {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+  display: block;
+  margin-top: 0.125rem;
+}
+
+.cellAmount {
+  text-align: right;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+.emptyCell {
+  text-align: center;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+}

@@ -1,0 +1,9 @@
+.page {
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.main {
+  margin-left: 16rem;
+  padding: var(--spacing-xl);
+}

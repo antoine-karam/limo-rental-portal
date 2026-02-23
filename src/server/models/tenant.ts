@@ -1,4 +1,5 @@
-import { JsonObject, JsonValue } from "@prisma/client/runtime/client";
+import { JsonValue } from "@prisma/client/runtime/client";
+import { BookingStatus, GeoRestrictionType } from "./enums";
 
 export interface Tenant {
   name: string;
@@ -15,10 +16,48 @@ export interface Tenant {
   geoRestrictionValue: JsonValue;
   active: boolean;
 }
-export const GeoRestrictionType = {
-  STATE: 'STATE',
-  RADIUS: 'RADIUS',
-  POLYGON: 'POLYGON'
-} as const
+export interface Statistics {
+  totalRevenueThisMonth: number;
+  totalRevenueLastMonth: number;
+  totalBookingsThisMonth: number;
+  totalBookingsToday: number;
+  totalVehicles: number;
+  totalInactiveVehicles: number;
+  totalDrivers: number;
+  totalInactiveDrivers: number;
+  completionRateThisMonth: number;
+  completionRateLastMonth: number;
+  avgTripDurationMinutes: number;
+  averageCustomerRating: number;
+  totalReviews: number;
+}
 
-export type GeoRestrictionType = (typeof GeoRestrictionType)[keyof typeof GeoRestrictionType]
+export interface RecentBooking {
+  id: string;
+  customer: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    phone: string | null;
+  };
+  vehicle: {
+    name: string;
+    type: string;
+  };
+  driver: {
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
+  pickupAddress: string;
+  dropoffAddress: string | null;
+  scheduledAt: Date;
+  status: BookingStatus;
+  quotedPrice: number;
+  finalPrice: number | null;
+  currency: string;
+}
+
+export interface RecentBookingsResult {
+  bookings: RecentBooking[];
+  total: number;
+}

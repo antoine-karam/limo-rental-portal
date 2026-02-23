@@ -1,3 +1,5 @@
+import { UserRole } from "./enums";
+
 export interface SyncAuthUserInput {
   id: string;
   email: string;
@@ -12,7 +14,7 @@ export interface SessionUserMetadata {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: "END_USER" | "DRIVER" | "ADMIN" | "SUPER_ADMIN";
+  role: UserRole;
   tenantId: string | null;
   avatarUrl: string | null;
 }

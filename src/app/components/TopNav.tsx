@@ -75,7 +75,7 @@ export function TopNav({ tenant, sessionUser }: TopNavProps) {
             </Link>
             {sessionUser?.role === "SUPER_ADMIN" && (
               <Link
-                href="/admin"
+                href={`/admin/${tenant?.id || "default-tenant"}`}
                 className={`${styles.navLink} ${isActive("/admin") ? styles.active : ""}`}
               >
                 Admin

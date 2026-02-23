@@ -1,3 +1,4 @@
+import { DateRangeFilter } from "@/server/models/booking";
 import { JsonValue } from "@prisma/client/runtime/client";
 
 export function buildVehicleDescription(
@@ -58,4 +59,29 @@ export function parseAmenities(
 
 export function cx(...classes: Array<string | undefined | null | false>) {
   return classes.filter(Boolean).join(" ");
+}
+
+export function getDateRangeFilter(filter: DateRangeFilter): { gte: Date; lt: Date } | undefined {
+  const now = new Date();
+
+  if (filter === 'today') {
+    return {
+      gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      lt:  new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+    };
+  }
+  if (filter === 'week') {
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    return { gte: startOfWeek, lt: new Date() };
+  }
+  if (filter === 'month') {
+    return {
+      gte: new Date(now.getFullYear(), now.getMonth(), 1),
+      lt:  new Date(now.getFullYear(), now.getMonth() + 1, 1),
+    };
+  }
+
+  return undefined;
 }

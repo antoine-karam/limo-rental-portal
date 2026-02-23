@@ -1,0 +1,66 @@
+.card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  transition: border-color var(--transition-fast);
+}
+
+.card:hover {
+  border-color: rgba(201, 162, 39, 0.3);
+}
+
+.inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+}
+
+.value {
+  font-size: 1.875rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.change {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.changePositive {
+  color: var(--color-success);
+}
+.changeNegative {
+  color: var(--color-error);
+}
+.changeNeutral {
+  color: var(--color-muted-foreground);
+}
+
+.iconWrap {
+  padding: 0.75rem;
+  background-color: rgba(201, 162, 39, 0.1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconWrap svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-primary);
+}
