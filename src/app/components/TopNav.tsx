@@ -4,11 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-import { Tenant } from "@/server/models/tenant";
+import type { Tenant } from "@/server/models/tenant";
+import type { SessionUserMetadata } from "@/server/users";
 
 import styles from "./TopNav.module.css";
 
-export function TopNav({ tenant }: { tenant: Tenant | null | undefined }) {
+type TopNavProps = {
+  tenant: Tenant | null | undefined;
+  sessionUser?: SessionUserMetadata | null;
+};
+
+export function TopNav({ tenant, sessionUser }: TopNavProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
@@ -19,7 +25,6 @@ export function TopNav({ tenant }: { tenant: Tenant | null | undefined }) {
     <nav className={styles.topNav}>
       <div className="container mx-auto px-6">
         <div className={styles.navContent}>
-          {/* Logo */}
           <Link href="/" className={styles.logo}>
             <div className={styles.logoIcon}>
               <Image
@@ -31,48 +36,50 @@ export function TopNav({ tenant }: { tenant: Tenant | null | undefined }) {
               />
             </div>
             <div className={styles.logoText}>
-              <h1 className={styles.logoTitle}>
-                {tenant?.slug || "Limo Rental"}
-              </h1>
-              <p className={styles.logoSubtitle}>
-                {tenant?.name || "Default Tenant"}
-              </p>
+              <h1 className={styles.logoTitle}>{tenant?.slug || "Limo Rental"}</h1>
+              <p className={styles.logoSubtitle}>{tenant?.name || "Default Tenant"}</p>
             </div>
           </Link>
 
-          {/* Navigation Links */}
           <div className={styles.navLinks}>
-            <Link
-              href="/"
-              className={`${styles.navLink} ${
-                isActive("/") ? styles.active : ""
-              }`}
-            >
+            <Link href="/" className={`${styles.navLink} ${isActive("/") ? styles.active : ""}`}>
               Home
             </Link>
             <Link
               href="/fleet"
-              className={`${styles.navLink} ${
-                isActive("/fleet") ? styles.active : ""
-              }`}
+              className={`${styles.navLink} ${isActive("/fleet") ? styles.active : ""}`}
             >
               Fleet
             </Link>
             <Link
               href="/booking"
-              className={`${styles.navLink} ${
-                isActive("/booking") ? styles.active : ""
-              }`}
+              className={`${styles.navLink} ${isActive("/booking") ? styles.active : ""}`}
             >
               Book Now
             </Link>
+            {sessionUser?.role === "SUPER_ADMIN" && (
+              <Link
+                href="/admin"
+                className={`${styles.navLink} ${isActive("/admin") ? styles.active : ""}`}
+              >
+                Admin
+              </Link>
+            )}
           </div>
 
-          {/* CTA Button */}
-            <div className={styles.navCta}>
+          <div className={styles.navCta}>
             <Link href="/booking" className="btn btn-primary">
-                Book a Ride
+              Book a Ride
             </Link>
+            {sessionUser ? (
+              <Link href="/api/auth/logout" className="btn btn-outline">
+                Sign Out
+              </Link>
+            ) : (
+              <Link href="/auth/sign-in" className="btn btn-outline">
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </div>

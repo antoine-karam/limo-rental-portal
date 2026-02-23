@@ -15,7 +15,7 @@ function getTenantSlug(hostname: string) {
   return subdomain;
 }
 
-const PUBLIC_PATHS = ["/", "/auth"];
+const PUBLIC_PATHS = ["/", "/auth", "/api/auth"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some(
@@ -28,7 +28,7 @@ const authMiddleware = withAuth(
     return NextResponse.next();
   },
   {
-    publicPaths: ["/", "/auth/:path*"],
+    publicPaths: ["/", "/auth/:path*", "/api/auth/:path*"],
   }
 );
 
