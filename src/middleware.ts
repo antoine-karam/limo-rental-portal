@@ -52,7 +52,6 @@ export default async function middleware(request: NextRequest) {
   const authResponse = await (authMiddleware as any)(request, {} as any);
 
   if (tenantSlug && authResponse) {
-    console.log("Setting tenant slug cookie for tenant:", tenantSlug);
     authResponse.cookies.set("x-tenant-slug", tenantSlug, {
       path: "/",
       sameSite: "lax",
