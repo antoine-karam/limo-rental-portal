@@ -57,6 +57,12 @@
     display: flex;
   }
 }
+@media (max-width: 500px) {
+  
+  .logoText {
+    display: none;
+  }
+}
 .navLink {
   font-size: 0.875rem;
   font-weight: var(--font-weight-medium);

@@ -68,10 +68,13 @@ export function TopNav({ tenant }: { tenant: Tenant | null | undefined }) {
             </Link>
           </div>
 
-          {/* CTA Button */}
-            <div className={styles.navCta}>
+          {/* CTA Buttons */}
+          <div className={styles.navCta}>
             <Link href="/booking" className="btn btn-primary">
-                Book a Ride
+              Book a Ride
+            </Link>
+            <Link href="/auth/sign-in" className="btn btn-outline">
+              Sign In
             </Link>
           </div>
         </div>

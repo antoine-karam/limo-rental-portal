@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { withAuth } from "@kinde-oss/kinde-auth-nextjs/middleware";
 import { NextRequest, NextResponse } from "next/server";
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "localhost:3000";
 
 function getTenantSlug(hostname: string) {
-  console.log("Hostname:", ROOT_DOMAIN);
-  if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}`) return null;
+  if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}`)
+    return null;
 
   const subdomain = hostname
     .replace(`.${ROOT_DOMAIN}`, "")
@@ -19,7 +20,7 @@ const PUBLIC_PATHS = ["/", "/auth"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 }
 
@@ -28,8 +29,8 @@ const authMiddleware = withAuth(
     return NextResponse.next();
   },
   {
-    publicPaths: ["/", "/auth/:path*"],
-  }
+    publicPaths: ["/", "/auth/:path*", "/api/auth/:path*"],
+  },
 );
 
 export default async function middleware(request: NextRequest) {
@@ -51,6 +52,7 @@ export default async function middleware(request: NextRequest) {
   const authResponse = await (authMiddleware as any)(request, {} as any);
 
   if (tenantSlug && authResponse) {
+    console.log("Setting tenant slug cookie for tenant:", tenantSlug);
     authResponse.cookies.set("x-tenant-slug", tenantSlug, {
       path: "/",
       sameSite: "lax",
