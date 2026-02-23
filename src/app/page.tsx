@@ -20,7 +20,6 @@ export default async function Home() {
   const fleetPreview = await GetFleetPreview(tenant?.id);
 
   const sessionUser = await getUserSessionMetadata();
-  console.log("Session user metadata:", sessionUser);
   return (
     <div className="min-h-screen bg-background">
       <TopNav tenant={tenant} sessionUser={sessionUser} />
