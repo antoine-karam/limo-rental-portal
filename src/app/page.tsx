@@ -1,11 +1,13 @@
-import { GetFleetPreview } from "@/server/fleet";
 import { getTenant } from "@/server/tenants";
+import { GetFleetPreview } from "@/server/fleet";
+import { getUserSessionMetadata } from "@/server/users";
+
+import { CTA } from "@/app/components/CTA";
+import { Fleet } from "@/app/components/Fleet";
+import { Footer } from "@/app/components/Footer";
 import { TopNav } from "@/app/components/TopNav";
 import { HeroSection } from "@/app/components/HeroSection";
 import { TrustIndicator } from "@/app/components/TrustIndicator";
-import { Footer } from "@/app/components/Footer";
-import { Fleet } from "@/app/components/Fleet";
-import { CTA } from "@/app/components/CTA";
 
 export default async function Home() {
   let tenant;
@@ -17,13 +19,15 @@ export default async function Home() {
 
   const fleetPreview = await GetFleetPreview(tenant?.id);
 
+  const sessionUser = await getUserSessionMetadata();
+  console.log("Session user metadata:", sessionUser);
   return (
     <div className="min-h-screen bg-background">
-      <TopNav tenant={tenant} />
+      <TopNav tenant={tenant} sessionUser={sessionUser} />
       <HeroSection tenant={tenant} />
       <TrustIndicator tenant={tenant} />
       <Fleet fleet={fleetPreview} />
-      <CTA/>
+      <CTA />
       <Footer />
     </div>
   );

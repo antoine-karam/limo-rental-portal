@@ -29,11 +29,22 @@ function getRequestOrigin(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const flow = request.nextUrl.searchParams.get("flow");
   const origin = getRequestOrigin(request);
+  if (flow === "logout") {
+    const response = NextResponse.redirect(new URL("/", origin));
+    response.cookies.set(SESSION_COOKIE_NAME, "", {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: SESSION_MAX_AGE,
+    });
+    return response;
+  }
   const { getUser } = getKindeServerSession();
   const kindeUser = await getUser();
 
   if (!kindeUser?.email || !kindeUser.id) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    return NextResponse.redirect(new URL("/auth/sign-in", origin));
   }
 
   const tenant = await getTenant();
