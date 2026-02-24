@@ -29,7 +29,10 @@ export default async function AdminPage({
     redirect("/auth/sign-in");
   }
 
-  if (sessionUser.role !== "SUPER_ADMIN") {
+  if (
+    sessionUser.role !== "SUPER_ADMIN" &&
+    (sessionUser.role !== "ADMIN" || sessionUser.tenantId !== tenantId)
+  ) {
     redirect("/");
   }
 

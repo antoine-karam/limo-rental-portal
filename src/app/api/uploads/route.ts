@@ -1,22 +1,29 @@
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
-import { createUploadUrl } from "@/lib/r2";
 
-export async function POST(req: Request) {
-  const { companyId, vehicleId, fileName, contentType } = await req.json();
+export async function POST(request: Request) {
+  const body = (await request.json()) as HandleUploadBody;
 
-  // basic sanitize
-  const safeName = String(fileName).replace(/[^a-zA-Z0-9._-]/g, "_");
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async () => {
+        return {
+          allowedContentTypes: ["image/jpeg", "image/png", "image/webp"],
+          addRandomSuffix: false,
+        };
+      },
+      onUploadCompleted: async ({ blob, tokenPayload }) => {
+        console.log("blob upload completed", blob, tokenPayload);
+      },
+    });
 
-  const key = `fleet/${companyId}/${vehicleId}/${Date.now()}-${safeName}`;
-
-  const uploadUrl = await createUploadUrl({
-    bucket: process.env.R2_BUCKET!,
-    key,
-    contentType,
-  });
-
-  // Your public delivery base (custom domain or public bucket URL)
-  const publicUrl = `${process.env.R2_PUBLIC_BASE_URL}/${key}`;
-
-  return NextResponse.json({ uploadUrl, publicUrl, key });
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 400 }
+    );
+  }
 }

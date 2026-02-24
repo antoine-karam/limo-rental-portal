@@ -9,6 +9,7 @@ import { VehicleType } from "@/server/models/enums";
 import { FleetVehicleRow } from "@/server/models/adminFleet";
 
 import styles from "./fleet.module.css";
+import { upload } from "@vercel/blob/client";
 
 const VEHICLE_TYPE_OPTIONS = Object.values(VehicleType);
 
@@ -171,36 +172,12 @@ export default function AdminFleetPage() {
     setError(null);
 
     try {
-      const uploadMetaRes = await fetch("/api/uploads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyId: tenantId,
-          vehicleId: form.id ?? "new",
-          fileName: file.name,
-          contentType: file.type || "application/octet-stream",
-        }),
+      const newBlob = await upload(`cars-on-spot/${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/uploads",
       });
 
-      if (!uploadMetaRes.ok) {
-        throw new Error("Failed to get upload URL");
-      }
-
-      const { uploadUrl, publicUrl } = await uploadMetaRes.json();
-
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-        },
-        body: file,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("File upload failed");
-      }
-
-      setForm((prev) => ({ ...prev, photoUrl: publicUrl }));
+      setForm((prev) => ({ ...prev, photoUrl: newBlob.url }));
     } catch {
       setError("Failed to upload image. Please try again.");
     } finally {
@@ -220,7 +197,9 @@ export default function AdminFleetPage() {
           className={styles.primaryBtn}
           onClick={openCreate}
           disabled={!canMutate}
-          title={canMutate ? "Add new vehicle" : "Select a tenant to add vehicles"}
+          title={
+            canMutate ? "Add new vehicle" : "Select a tenant to add vehicles"
+          }
         >
           <Plus />
           Add Vehicle
@@ -365,7 +344,11 @@ export default function AdminFleetPage() {
         <div className={styles.offcanvasHeader}>
           <div>
             <h2>{form.id ? "Edit Vehicle" : "Add Vehicle"}</h2>
-            <p>{form.id ? "Update the selected fleet vehicle." : "Create a new fleet vehicle."}</p>
+            <p>
+              {form.id
+                ? "Update the selected fleet vehicle."
+                : "Create a new fleet vehicle."}
+            </p>
           </div>
           <button className={styles.iconBtn} onClick={closeDrawer}>
             <X size={18} />
@@ -378,7 +361,9 @@ export default function AdminFleetPage() {
             <input
               required
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, name: e.target.value }))
+              }
             />
           </label>
 
@@ -387,7 +372,10 @@ export default function AdminFleetPage() {
             <select
               value={form.type}
               onChange={(e) =>
-                setForm((prev) => ({ ...prev, type: e.target.value as VehicleType }))
+                setForm((prev) => ({
+                  ...prev,
+                  type: e.target.value as VehicleType,
+                }))
               }
             >
               {VEHICLE_TYPE_OPTIONS.map((type) => (
@@ -403,14 +391,18 @@ export default function AdminFleetPage() {
               Make
               <input
                 value={form.make}
-                onChange={(e) => setForm((prev) => ({ ...prev, make: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, make: e.target.value }))
+                }
               />
             </label>
             <label>
               Model
               <input
                 value={form.model}
-                onChange={(e) => setForm((prev) => ({ ...prev, model: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, model: e.target.value }))
+                }
               />
             </label>
           </div>
@@ -423,7 +415,9 @@ export default function AdminFleetPage() {
                 min="1990"
                 max="2100"
                 value={form.year}
-                onChange={(e) => setForm((prev) => ({ ...prev, year: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, year: e.target.value }))
+                }
               />
             </label>
             <label>
@@ -454,7 +448,9 @@ export default function AdminFleetPage() {
             Color
             <input
               value={form.color}
-              onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, color: e.target.value }))
+              }
             />
           </label>
 
@@ -469,7 +465,9 @@ export default function AdminFleetPage() {
             {isUploading ? (
               <span className={styles.helperText}>Uploading image…</span>
             ) : form.photoUrl ? (
-              <span className={styles.helperText}>Image uploaded successfully.</span>
+              <span className={styles.helperText}>
+                Image uploaded successfully.
+              </span>
             ) : (
               <span className={styles.helperText}>Upload a vehicle image.</span>
             )}
@@ -491,7 +489,11 @@ export default function AdminFleetPage() {
             type="submit"
             disabled={isSaving || isUploading}
           >
-            {isSaving ? "Saving..." : form.id ? "Save Changes" : "Create Vehicle"}
+            {isSaving
+              ? "Saving..."
+              : form.id
+                ? "Save Changes"
+                : "Create Vehicle"}
           </button>
         </form>
       </aside>

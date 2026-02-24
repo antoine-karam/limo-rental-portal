@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
   }
   let response = NextResponse.redirect(new URL("/", origin));
   if (userMetadata?.role === "ADMIN" || userMetadata?.role === "DRIVER") {
-    response = NextResponse.redirect(new URL("/dashboard", origin));
+    response = NextResponse.redirect(new URL("/", origin));
   }
   if (userMetadata?.role === "SUPER_ADMIN") {
-    response = NextResponse.redirect(new URL("/admin", origin));
+    response = NextResponse.redirect(new URL("/admin/default-tenant", origin));
   }
   if (userMetadata) {
     response.cookies.set(
