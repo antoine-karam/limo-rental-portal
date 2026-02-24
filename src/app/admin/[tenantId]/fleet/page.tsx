@@ -55,6 +55,7 @@ export default function AdminFleetPage() {
 
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const [isUploading, setUploading] = useState(false);
   const [form, setForm] = useState<VehicleFormState>(defaultForm);
 
   useEffect(() => {
@@ -160,6 +161,50 @@ export default function AdminFleetPage() {
       setError("Failed to save vehicle. Please verify all fields.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const onSelectPhoto = async (file: File | null) => {
+    if (!file || !tenantId || !canMutate) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const uploadMetaRes = await fetch("/api/uploads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyId: tenantId,
+          vehicleId: form.id ?? "new",
+          fileName: file.name,
+          contentType: file.type || "application/octet-stream",
+        }),
+      });
+
+      if (!uploadMetaRes.ok) {
+        throw new Error("Failed to get upload URL");
+      }
+
+      const { uploadUrl, publicUrl } = await uploadMetaRes.json();
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("File upload failed");
+      }
+
+      setForm((prev) => ({ ...prev, photoUrl: publicUrl }));
+    } catch {
+      setError("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -414,13 +459,20 @@ export default function AdminFleetPage() {
           </label>
 
           <label>
-            Photo URL
+            Vehicle Photo
             <input
-              value={form.photoUrl}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, photoUrl: e.target.value }))
-              }
+              type="file"
+              accept="image/*"
+              onChange={(e) => onSelectPhoto(e.target.files?.[0] ?? null)}
+              disabled={isUploading}
             />
+            {isUploading ? (
+              <span className={styles.helperText}>Uploading image…</span>
+            ) : form.photoUrl ? (
+              <span className={styles.helperText}>Image uploaded successfully.</span>
+            ) : (
+              <span className={styles.helperText}>Upload a vehicle image.</span>
+            )}
           </label>
 
           <label className={styles.checkboxLabel}>
@@ -434,7 +486,11 @@ export default function AdminFleetPage() {
             Vehicle is active
           </label>
 
-          <button className={styles.primaryBtn} type="submit" disabled={isSaving}>
+          <button
+            className={styles.primaryBtn}
+            type="submit"
+            disabled={isSaving || isUploading}
+          >
             {isSaving ? "Saving..." : form.id ? "Save Changes" : "Create Vehicle"}
           </button>
         </form>

@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     prisma.vehicle.count({ where }),
   ]);
 
-  const payload = vehicles.map((vehicle: any) => ({
+  const payload = vehicles.map((vehicle) => ({
     id: vehicle.id,
     name: vehicle.name,
     type: vehicle.type,
