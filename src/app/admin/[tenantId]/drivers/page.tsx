@@ -1,12 +1,38 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Mail, Phone, Search, Star, UserPlus } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Mail, Pencil, Phone, Search, Star, UserPlus, X } from "lucide-react";
 
 import { useAdminTenant } from "@/app/admin/_providers/AdminTenantProvider";
+import { DriverStatus } from "@/server/models/enums";
 import { DriverRow } from "@/server/models/adminDriver";
 
 import styles from "./drivers.module.css";
+
+type DriverFormState = {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  licenseNumber: string;
+  status: DriverStatus;
+};
+
+const defaultForm: DriverFormState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  licenseNumber: "",
+  status: DriverStatus.AVAILABLE,
+};
+
+const STATUS_OPTIONS = [
+  DriverStatus.AVAILABLE,
+  DriverStatus.ON_RIDE,
+  DriverStatus.OFFLINE,
+] as const;
 
 function fullName(firstName: string | null, lastName: string | null) {
   return [firstName, lastName].filter(Boolean).join(" ") || "Unnamed Driver";
@@ -19,15 +45,19 @@ function initials(firstName: string | null, lastName: string | null) {
 }
 
 function statusLabel(status: DriverRow["status"]) {
-  if (status === "AVAILABLE" || status === "ON_RIDE") return "Active";
-  if (status === "OFFLINE") return "Off Duty";
+  if (status === DriverStatus.AVAILABLE || status === DriverStatus.ON_RIDE) return "Active";
+  if (status === DriverStatus.OFFLINE) return "Off Duty";
   return "Inactive";
 }
 
 function statusClass(status: DriverRow["status"]) {
-  if (status === "AVAILABLE" || status === "ON_RIDE") return styles.statusActive;
-  if (status === "OFFLINE") return styles.statusOffDuty;
+  if (status === DriverStatus.AVAILABLE || status === DriverStatus.ON_RIDE) return styles.statusActive;
+  if (status === DriverStatus.OFFLINE) return styles.statusOffDuty;
   return styles.statusInactive;
+}
+
+function prettyStatus(status: DriverStatus) {
+  return status.replace("_", " ");
 }
 
 export default function AdminDriversPage() {
@@ -44,6 +74,10 @@ export default function AdminDriversPage() {
   const [avgRating, setAvgRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [isSaving, setSaving] = useState(false);
+  const [form, setForm] = useState<DriverFormState>(defaultForm);
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 250);
@@ -83,7 +117,70 @@ export default function AdminDriversPage() {
     fetchDrivers();
   }, [fetchDrivers]);
 
-  const inactiveCount = useMemo(() => total - active - offDuty, [active, offDuty, total]);
+  const inactiveCount = useMemo(
+    () => Math.max(total - active - offDuty, 0),
+    [active, offDuty, total],
+  );
+
+  const openCreate = () => {
+    if (!canMutate) return;
+    setForm(defaultForm);
+    setDrawerOpen(true);
+  };
+
+  const openEdit = (driver: DriverRow) => {
+    if (!canMutate) return;
+    setForm({
+      id: driver.id,
+      firstName: driver.firstName ?? "",
+      lastName: driver.lastName ?? "",
+      email: driver.email,
+      phone: driver.phone ?? "",
+      licenseNumber: driver.licenseNumber ?? "",
+      status: driver.status ?? DriverStatus.OFFLINE,
+    });
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    if (isSaving) return;
+    setDrawerOpen(false);
+  };
+
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!tenantId || !canMutate) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const payload = {
+        ...form,
+        tenantId,
+      };
+
+      const method = form.id ? "PATCH" : "POST";
+      const response = await fetch("/api/drivers", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error ?? "Save failed");
+      }
+
+      setDrawerOpen(false);
+      setForm(defaultForm);
+      await fetchDrivers();
+    } catch {
+      setError("Failed to save driver. Please check your form data.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -96,6 +193,7 @@ export default function AdminDriversPage() {
           className={styles.addBtn}
           disabled={!canMutate}
           title={canMutate ? "Add Driver" : "Select a tenant to add drivers"}
+          onClick={openCreate}
         >
           <UserPlus size={16} />
           Add Driver
@@ -154,27 +252,41 @@ export default function AdminDriversPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className={styles.emptyCell}>Loading drivers…</td>
+                <td colSpan={8} className={styles.emptyCell}>
+                  Loading drivers…
+                </td>
               </tr>
             ) : drivers.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.emptyCell}>No drivers found.</td>
+                <td colSpan={8} className={styles.emptyCell}>
+                  No drivers found.
+                </td>
               </tr>
             ) : (
               drivers.map((driver) => (
                 <tr key={driver.id}>
                   <td>
                     <div className={styles.driverCell}>
-                      <div className={styles.avatar}>{initials(driver.firstName, driver.lastName)}</div>
-                      <p className={styles.driverName}>{fullName(driver.firstName, driver.lastName)}</p>
+                      <div className={styles.avatar}>
+                        {initials(driver.firstName, driver.lastName)}
+                      </div>
+                      <p className={styles.driverName}>
+                        {fullName(driver.firstName, driver.lastName)}
+                      </p>
                     </div>
                   </td>
                   <td>
-                    <p className={styles.contactLine}><Mail size={12} /> {driver.email}</p>
-                    <p className={styles.contactLine}><Phone size={12} /> {driver.phone ?? "—"}</p>
+                    <p className={styles.contactLine}>
+                      <Mail size={12} /> {driver.email}
+                    </p>
+                    <p className={styles.contactLine}>
+                      <Phone size={12} /> {driver.phone ?? "—"}
+                    </p>
                   </td>
                   <td className={styles.muted}>{driver.licenseNumber ?? "—"}</td>
-                  <td className={styles.rating}><Star size={12} /> {driver.rating ? driver.rating.toFixed(1) : "—"}</td>
+                  <td className={styles.rating}>
+                    <Star size={12} /> {driver.rating ? driver.rating.toFixed(1) : "—"}
+                  </td>
                   <td className={styles.trips}>{driver.totalRides}</td>
                   <td className={styles.muted}>{driver.vehicleName ?? "None"}</td>
                   <td>
@@ -183,7 +295,13 @@ export default function AdminDriversPage() {
                     </span>
                   </td>
                   <td>
-                    <button className={styles.viewBtn}>View</button>
+                    <button
+                      className={styles.viewBtn}
+                      onClick={() => openEdit(driver)}
+                      disabled={!canMutate}
+                    >
+                      <Pencil size={12} /> Edit
+                    </button>
                   </td>
                 </tr>
               ))
@@ -193,9 +311,108 @@ export default function AdminDriversPage() {
       </div>
 
       {!canMutate && (
-        <p className={styles.helperText}>Add driver is disabled for default tenant.</p>
+        <p className={styles.helperText}>
+          Add and edit actions are disabled for default tenant.
+        </p>
       )}
-      {inactiveCount > 0 && <p className={styles.helperText}>{inactiveCount} inactive driver(s).</p>}
+      {inactiveCount > 0 && (
+        <p className={styles.helperText}>{inactiveCount} inactive driver(s).</p>
+      )}
+
+      <div
+        className={`${styles.backdrop} ${isDrawerOpen ? styles.backdropVisible : ""}`}
+        onClick={closeDrawer}
+      />
+
+      <aside className={`${styles.offcanvas} ${isDrawerOpen ? styles.offcanvasOpen : ""}`}>
+        <div className={styles.offcanvasHeader}>
+          <div>
+            <h2>{form.id ? "Edit Driver" : "Add Driver"}</h2>
+            <p>
+              {form.id
+                ? "Update this driver's details."
+                : "Create a new driver account for this tenant."}
+            </p>
+          </div>
+          <button className={styles.iconBtn} onClick={closeDrawer}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <form className={styles.form} onSubmit={onSubmit}>
+          <div className={styles.formGrid}>
+            <label>
+              First Name
+              <input
+                required
+                value={form.firstName}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, firstName: e.target.value }))
+                }
+              />
+            </label>
+
+            <label>
+              Last Name
+              <input
+                required
+                value={form.lastName}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, lastName: e.target.value }))
+                }
+              />
+            </label>
+          </div>
+
+          <label>
+            Email
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+            />
+          </label>
+
+          <label>
+            Phone
+            <input
+              value={form.phone}
+              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+            />
+          </label>
+
+          <label>
+            License Number
+            <input
+              value={form.licenseNumber}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, licenseNumber: e.target.value }))
+              }
+            />
+          </label>
+
+          <label>
+            Driver Status
+            <select
+              value={form.status}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, status: e.target.value as DriverStatus }))
+              }
+            >
+              {STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {prettyStatus(status)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button className={styles.addBtn} type="submit" disabled={isSaving}>
+            {isSaving ? "Saving..." : form.id ? "Save Changes" : "Create Driver"}
+          </button>
+        </form>
+      </aside>
     </>
   );
 }
