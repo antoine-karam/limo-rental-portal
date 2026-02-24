@@ -30,11 +30,11 @@ export function TopNav({ tenant, sessionUser }: TopNavProps) {
           <Link href="/" className={styles.logo}>
             <div className={styles.logoIcon}>
               <Image
-                className="w6- h-6 text-primary-foreground"
+                className="w-10 h-10 text-primary-foreground"
                 src={tenant?.logoUrl || "/default-logo.png"}
                 alt="Logo"
-                width={24}
-                height={24}
+                width={32}
+                height={32}
               />
             </div>
             <div className={styles.logoText}>
@@ -73,7 +73,8 @@ export function TopNav({ tenant, sessionUser }: TopNavProps) {
             >
               Book Now
             </Link>
-            {sessionUser?.role === "SUPER_ADMIN" && (
+            {(sessionUser?.role === "SUPER_ADMIN" ||
+              sessionUser?.role === "ADMIN") && (
               <Link
                 href={`/admin/${tenant?.id || "default-tenant"}`}
                 className={`${styles.navLink} ${isActive("/admin") ? styles.active : ""}`}
@@ -89,11 +90,11 @@ export function TopNav({ tenant, sessionUser }: TopNavProps) {
               Book a Ride
             </Link>
             {sessionUser ? (
-             <LogoutLink
+              <LogoutLink
                 className="btn btn-outline"
                 postLogoutRedirectURL={`${origin}/auth/callback?flow=logout`}
               >
-                Sign Out 
+                Sign Out
               </LogoutLink>
             ) : (
               <Link href="/auth/sign-in" className="btn btn-outline">

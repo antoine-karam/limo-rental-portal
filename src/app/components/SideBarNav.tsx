@@ -5,12 +5,12 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs";
 import {
-    Calendar,
-    Car,
-    LayoutDashboard,
-    LogOut,
-    Settings,
-    Users,
+  Calendar,
+  Car,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
 } from "lucide-react";
 import { Tenant } from "@/generated/prisma/browser";
 
@@ -21,13 +21,11 @@ const adminLinks = [
   { icon: Calendar, label: "Bookings", path: "bookings" },
   { icon: Car, label: "Fleet", path: "fleet" },
   { icon: Users, label: "Drivers", path: "drivers" },
-  { icon: Settings, label: "Settings", path: "settings" },
 ];
 
 const driverLinks = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/driver" },
   { icon: Calendar, label: "My Trips", path: "/driver/trips" },
-  { icon: Settings, label: "Settings", path: "/driver/settings" },
 ];
 
 export function SideBarNav({
@@ -68,11 +66,11 @@ export function SideBarNav({
         >
           <div className={styles.logoIcon}>
             <Image
-              className="w6- h-6 text-primary-foreground"
+              className="w-10 h-10 text-primary-foreground"
               src={tenant?.logoUrl || "/default-logo.png"}
               alt="Logo"
-              width={24}
-              height={24}
+              width={32}
+              height={32}
             />
           </div>
           <div>
@@ -125,10 +123,9 @@ export function SideBarNav({
               const Icon = link.icon;
 
               // Build correct routes: /admin/:tenantId/<subpath>
-              const href =
-                selectedTenantId
-                  ? `${tenantBase}/${link.path}`.replace(/\/$/, "")
-                  : "/admin"; // if no tenant selected, keep them on /admin
+              const href = selectedTenantId
+                ? `${tenantBase}/${link.path}`.replace(/\/$/, "")
+                : "/admin"; // if no tenant selected, keep them on /admin
 
               const isActive =
                 link.path === ""

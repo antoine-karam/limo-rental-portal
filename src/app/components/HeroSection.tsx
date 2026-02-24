@@ -24,9 +24,9 @@ export function HeroSection({ tenant }: { tenant: Tenant | null | undefined }) {
       <div className="container">
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Luxury Transportation.
+            {tenant?.name}
             <br />
-            <span className={styles.heroTitleAccent}>On Your Schedule.</span>
+            <span className={styles.heroTitleAccent}>Limo Services</span>
           </h1>
           <p className={styles.heroDescription}>
             Experience premium limousine service across Texas. Professional

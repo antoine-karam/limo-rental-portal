@@ -1,38 +1,38 @@
 :root {
-  /* Colors - Primary */
-  --color-background: #0b0f17;
-  --color-foreground: #f3f4f6;
-  --color-card: #111827;
-  --color-card-foreground: #f3f4f6;
-  --color-secondary: #1f2937;
-  --color-secondary-foreground: #f3f4f6;
+  /* Colors - Primary (Silver/Chrome accent replacing gold) */
+  --color-background: #0d0d0d;
+  --color-foreground: #e8e8e8;
+  --color-card: #161616;
+  --color-card-foreground: #e8e8e8;
+  --color-secondary: #1c1c1c;
+  --color-secondary-foreground: #e8e8e8;
 
-  /* Colors - Accent */
-  --color-primary: #c9a227;
-  --color-primary-foreground: #0b0f17;
+  /* Colors - Accent (Silver/Chrome replacing gold) */
+  --color-primary: #b0b8c1;
+  --color-primary-foreground: #0d0d0d;
 
   /* Colors - Text */
-  --color-text-primary: #f3f4f6;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #9a9a9a;
+  --color-text-muted: #5c5c5c;
 
   /* Colors - Borders */
-  --color-border: #1f2937;
-  --color-border-hover: rgba(201, 162, 39, 0.5);
+  --color-border: #252525;
+  --color-border-hover: rgba(176, 184, 193, 0.4);
 
   /* Colors - Status */
   --color-success: #10b981;
-  --color-success-foreground: #f3f4f6;
+  --color-success-foreground: #e8e8e8;
   --color-warning: #f59e0b;
-  --color-warning-foreground: #0b0f17;
+  --color-warning-foreground: #0d0d0d;
   --color-error: #ef4444;
-  --color-error-foreground: #f3f4f6;
+  --color-error-foreground: #e8e8e8;
   --color-info: #3b82f6;
-  --color-info-foreground: #f3f4f6;
+  --color-info-foreground: #e8e8e8;
 
   /* Colors - Muted */
-  --color-muted: #374151;
-  --color-muted-foreground: #9ca3af;
+  --color-muted: #2a2a2a;
+  --color-muted-foreground: #9a9a9a;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -50,12 +50,12 @@
   --radius-xl: 1rem;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.7);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.7), 0 2px 4px -2px rgb(0 0 0 / 0.7);
   --shadow-lg:
-    0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    0 10px 15px -3px rgb(0 0 0 / 0.7), 0 4px 6px -4px rgb(0 0 0 / 0.7);
   --shadow-xl:
-    0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
 
   /* Font */
   --font-family:
@@ -340,13 +340,15 @@ a:hover {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
+  background: linear-gradient(135deg, #c8cfd8 0%, #8e9aaa 50%, #c8cfd8 100%);
+  color: #0d0d0d;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
 .btn-primary:hover {
-  background-color: #b89320;
-  color: var(--color-primary-foreground);
+  background: linear-gradient(135deg, #dde3ea 0%, #a5b0bc 50%, #dde3ea 100%);
+  color: #0d0d0d;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
 .btn-outline {
@@ -393,11 +395,12 @@ a:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  transition: border-color var(--transition-normal);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .card:hover {
   border-color: var(--color-border-hover);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .card-content {
@@ -438,7 +441,7 @@ a:hover {
 .form-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.1);
+  box-shadow: 0 0 0 2px rgba(176, 184, 193, 0.1);
 }
 
 .form-input:disabled {
@@ -489,9 +492,9 @@ a:hover {
 }
 
 .badge-primary {
-  background-color: rgba(201, 162, 39, 0.1);
+  background-color: rgba(176, 184, 193, 0.1);
   color: var(--color-primary);
-  border-color: rgba(201, 162, 39, 0.2);
+  border-color: rgba(176, 184, 193, 0.2);
 }
 
 /* ========================================
@@ -525,7 +528,7 @@ a:hover {
 }
 
 .table tbody tr:hover {
-  background-color: rgba(31, 41, 55, 0.5);
+  background-color: rgba(28, 28, 28, 0.8);
 }
 
 /* ========================================
