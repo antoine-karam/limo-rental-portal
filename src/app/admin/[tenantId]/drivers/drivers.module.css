@@ -1,0 +1,228 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.headerText h1 {
+  font-size: 2.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.headerText p {
+  color: var(--color-muted-foreground);
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1rem;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.statCounter {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 0.875rem 1rem;
+}
+
+.statActive {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.statWarning {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--color-muted-foreground);
+}
+
+.statValue {
+  margin-top: 0.3rem;
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.starInline {
+  color: var(--color-primary);
+}
+
+.searchCard {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.searchWrap {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-foreground);
+  width: 1rem;
+  height: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.75rem 0.625rem 2.3rem;
+}
+
+.tableCard {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.table th {
+  color: var(--color-muted-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.table tr:hover {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.driverCell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.18);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.driverName {
+  font-weight: var(--font-weight-semibold);
+}
+
+.contactLine {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: var(--color-muted-foreground);
+  font-size: 0.8rem;
+}
+
+.muted {
+  color: var(--color-muted-foreground);
+}
+
+.rating {
+  color: var(--color-primary);
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.trips {
+  font-weight: var(--font-weight-semibold);
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.statusActive {
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.statusOffDuty {
+  color: var(--color-warning);
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.statusInactive {
+  color: var(--color-muted-foreground);
+  background: rgba(107, 114, 128, 0.15);
+}
+
+.viewBtn {
+  border: 1px solid var(--color-border);
+  background: #060b14;
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.75rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyCell {
+  text-align: center;
+  color: var(--color-muted-foreground);
+  padding: 2.5rem 1rem !important;
+}
+
+.errorMsg,
+.helperText {
+  color: var(--color-muted-foreground);
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.errorMsg {
+  color: var(--color-error);
+}
