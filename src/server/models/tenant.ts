@@ -61,3 +61,6 @@ export interface RecentBookingsResult {
   bookings: RecentBooking[];
   total: number;
 }
+export type StateRestriction = { states: string[] };
+export type RadiusRestriction = { lat: number; lng: number; km: number };
+export type PolygonRestriction = { coordinates: [number, number][] };

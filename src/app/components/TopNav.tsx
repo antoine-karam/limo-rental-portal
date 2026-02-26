@@ -83,12 +83,18 @@ export function TopNav({ tenant, sessionUser }: TopNavProps) {
               </Link>
             )}
           </div>
-
+          {isActive("/booking") && (
+            <p>
+              <strong>Book Your Ride</strong>
+            </p>
+          )}
           {/* CTA Buttons */}
           <div className={styles.navCta}>
-            <Link href="/booking" className="btn btn-primary">
-              Book a Ride
-            </Link>
+            {!isActive("/booking") && (
+              <Link href="/booking" className="btn btn-primary">
+                Book a Ride
+              </Link>
+            )}
             {sessionUser ? (
               <LogoutLink
                 className="btn btn-outline"

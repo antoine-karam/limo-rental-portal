@@ -1,0 +1,85 @@
+.stepper {
+  width: 100%;
+  padding: 32px 0;
+}
+
+.stepperTrack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.stepperLineBg {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-secondary, #e2e8f0);
+  z-index: 0;
+}
+
+.stepperLineFill {
+  height: 100%;
+  background-color: var(--color-primary, #0f172a);
+  transition: width 0.5s ease;
+}
+
+.stepperStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.stepperCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid;
+  transition: all 0.3s ease;
+  background-color: var(--color-card, #ffffff);
+  border-color: var(--color-border, #e2e8f0);
+  color: var(--color-muted-foreground, #64748b);
+}
+
+.stepperCircle.completed,
+.stepperCircle.current {
+  background-color: var(--color-primary, #0f172a);
+  border-color: var(--color-primary, #0f172a);
+  color: var(--color-primary-foreground, #ffffff);
+}
+
+.stepperCircle.current {
+  transform: scale(1.1);
+}
+
+.stepperLabel {
+  text-align: center;
+}
+
+.stepperLabelText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-muted-foreground, #64748b);
+  margin: 0;
+}
+
+.stepperLabelText.active {
+  color: var(--color-foreground, #0f172a);
+}
+
+.stepperDescription {
+  font-size: 12px;
+  color: var(--color-muted-foreground, #64748b);
+  margin: 4px 0 0 0;
+}

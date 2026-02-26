@@ -9,7 +9,6 @@ import {
   Car,
   LayoutDashboard,
   LogOut,
-  Settings,
   Users,
 } from "lucide-react";
 import { Tenant } from "@/generated/prisma/browser";
