@@ -517,11 +517,7 @@ export const BookingForm: React.FC<
         )}
 
         {step === 1 && (
-          <>
-            <div className={styles.stepCard}>
-              <h3 className={styles.stepTitle}>Select Your Vehicle</h3>
-              <p className={styles.stepSubtitle}>Choose from our premium fleet</p>
-            </div>
+          <div className={styles.stepCard}>
             <div className={styles.vehicleGrid}>
               {vehicles.map((vehicle) => {
                 const estimated = buildEstimatedPrice(
@@ -611,7 +607,7 @@ export const BookingForm: React.FC<
                 Continue to Passenger Details
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
       <div className={styles.formSidebar}>
@@ -628,7 +624,6 @@ export const BookingForm: React.FC<
                 <p><strong>Passengers:</strong> {bookingSummary.passengers}</p>
                 <p><strong>Distance:</strong> {bookingSummary.distance}</p>
                 <p><strong>Duration:</strong> {bookingSummary.duration}</p>
-                <p><strong>Est. taxes & fees:</strong> {formatMoney(0)}</p>
                 <p className={styles.summaryTotal}>
                   <strong>Total:</strong>{" "}
                   {selectedVehicleId
