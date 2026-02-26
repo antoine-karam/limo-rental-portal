@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { MapPin, Users, Briefcase, Clock3 } from "lucide-react";
 import styles from "../booking.module.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -13,7 +13,14 @@ import {
   parseStateRestriction,
 } from "@/lib/helper";
 import { useRouter } from "next/navigation";
-import { GeoRestrictionType, RideType } from "@/server/models/enums";
+import Image from "next/image";
+import {
+  GeoRestrictionType,
+  PricingModel,
+  RideType,
+} from "@/server/models/enums";
+import type { BookingVehicleOption } from "../types";
+
 type RestrictionProps = {
   geoRestrictionEnabled: boolean;
   geoRestrictionType: GeoRestrictionType | null;
@@ -26,10 +33,63 @@ const RIDE_TYPES: { value: RideType; label: string }[] = [
   { value: "FROM_AIRPORT", label: "From Airport" },
   { value: "HOURLY", label: "Hourly" },
 ];
+
+const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+function formatMoney(value: number) {
+  return CURRENCY_FORMATTER.format(value);
+}
+
+function parseDistanceMiles(distanceLabel: string) {
+  const value = Number.parseFloat(distanceLabel.replace(/[^\d.]/g, ""));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function buildEstimatedPrice(
+  vehicle: BookingVehicleOption,
+  rideType: RideType,
+  miles: number,
+  hours: number,
+) {
+  const rule = vehicle.pricingByRideType[rideType];
+  if (!rule) return null;
+
+  let total = rule.basePrice;
+
+  if (rule.pricingModel === PricingModel.PER_MILE) {
+    total += (rule.perUnitPrice ?? 0) * miles;
+  }
+
+  if (rule.pricingModel === PricingModel.PER_KM) {
+    total += (rule.perUnitPrice ?? 0) * (miles * 1.60934);
+  }
+
+  if (rule.pricingModel === PricingModel.HOURLY) {
+    const billableHours = Math.max(hours, rule.minimumHours ?? 0);
+    total += (rule.perUnitPrice ?? 0) * billableHours;
+  }
+
+  return {
+    total,
+    breakdown:
+      rule.pricingModel === PricingModel.FLAT_RATE
+        ? `Flat rate ${formatMoney(rule.basePrice)}`
+        : rule.pricingModel === PricingModel.PER_MILE
+          ? `${formatMoney(rule.basePrice)} + ${formatMoney(rule.perUnitPrice ?? 0)}/mile`
+          : rule.pricingModel === PricingModel.PER_KM
+            ? `${formatMoney(rule.basePrice)} + ${formatMoney(rule.perUnitPrice ?? 0)}/km`
+            : `${formatMoney(rule.basePrice)} + ${formatMoney(rule.perUnitPrice ?? 0)}/hr`,
+  };
+}
+
 export const BookingForm: React.FC<
-  { initialStep: number } & RestrictionProps
+  { initialStep: number; vehicles: BookingVehicleOption[] } & RestrictionProps
 > = ({
   initialStep = 0,
+  vehicles,
   geoRestrictionEnabled,
   geoRestrictionType,
   geoRestrictionValue,
@@ -48,6 +108,9 @@ export const BookingForm: React.FC<
   const [distanceLabel, setDistanceLabel] = useState("");
   const [durationLabel, setDurationLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+    null,
+  );
   const [currentTimestamp, setCurrentTimestamp] = useState<number>(() =>
     Date.now(),
   );
@@ -62,6 +125,12 @@ export const BookingForm: React.FC<
     router.push(`?step=${next}`, { scroll: false });
   }, [step, router]);
 
+  const handlePrevious = useCallback(() => {
+    const previous = Math.max(step - 1, 0);
+    setStep(previous);
+    router.push(`?step=${previous}`, { scroll: false });
+  }, [step, router]);
+
   const dateTimeValid = useMemo(() => {
     if (!scheduledDate || !scheduledTime) return false;
     const selected = new Date(`${scheduledDate}T${scheduledTime}`);
@@ -73,6 +142,30 @@ export const BookingForm: React.FC<
     if (rideType === "HOURLY") return Number(hours) > 0;
     return Boolean(dropoff);
   }, [pickup, dateTimeValid, rideType, hours, dropoff]);
+
+  const distanceMiles = useMemo(
+    () => parseDistanceMiles(distanceLabel),
+    [distanceLabel],
+  );
+
+  const bookingSummary = useMemo(
+    () => ({
+      pickup: pickup?.address ?? "Not set",
+      dropoff: rideType === "HOURLY" ? "Hourly ride" : (dropoff?.address ?? "Not set"),
+      date: scheduledDate || "Not set",
+      time: scheduledTime || "Not set",
+      passengers,
+      distance:
+        rideType === "HOURLY"
+          ? "Calculated after trip"
+          : (distanceLabel || "Not set"),
+      duration:
+        rideType === "HOURLY"
+          ? `${hours} hours`
+          : (durationLabel || "Not set"),
+    }),
+    [pickup, dropoff, scheduledDate, scheduledTime, passengers, distanceLabel, durationLabel, rideType, hours],
+  );
 
   //init
   useEffect(() => {
@@ -104,8 +197,8 @@ export const BookingForm: React.FC<
           const stateCode = getStateCode(place);
           return Boolean(
             stateRestriction &&
-            stateCode &&
-            stateRestriction.states.includes(stateCode),
+              stateCode &&
+              stateRestriction.states.includes(stateCode),
           );
         }
 
@@ -250,7 +343,6 @@ export const BookingForm: React.FC<
         {step === 0 && (
           <div className={styles.stepCard}>
             <div className={styles.fieldGroup}>
-              {/* Ride Type */}
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="rideType">
                   Ride type
@@ -268,7 +360,7 @@ export const BookingForm: React.FC<
                   ))}
                 </select>
               </div>
-              {/* Pickup */}
+
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="pickupAddress">
                   Pickup Location
@@ -283,7 +375,7 @@ export const BookingForm: React.FC<
                   />
                 </div>
               </div>
-              {/* Dropoff */}
+
               {rideType !== "HOURLY" ? (
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="dropoffAddress">
@@ -319,7 +411,6 @@ export const BookingForm: React.FC<
                 </div>
               )}
 
-              {/* Date & Time */}
               <div className={styles.dateTimeGroup}>
                 <div className={styles.field}>
                   <label className={styles.label}>Pickup Date</label>
@@ -344,7 +435,7 @@ export const BookingForm: React.FC<
                   />
                 </div>
               </div>
-              {/* Passengers / Luggage / Child Seats */}
+
               <div className={styles.detailsGrid}>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="passengers">
@@ -424,10 +515,136 @@ export const BookingForm: React.FC<
             </div>
           </div>
         )}
+
+        {step === 1 && (
+          <>
+            <div className={styles.stepCard}>
+              <h3 className={styles.stepTitle}>Select Your Vehicle</h3>
+              <p className={styles.stepSubtitle}>Choose from our premium fleet</p>
+            </div>
+            <div className={styles.vehicleGrid}>
+              {vehicles.map((vehicle) => {
+                const estimated = buildEstimatedPrice(
+                  vehicle,
+                  rideType,
+                  distanceMiles,
+                  Number(hours),
+                );
+                const selected = selectedVehicleId === vehicle.id;
+
+                return (
+                  <article
+                    key={vehicle.id}
+                    className={`${styles.vehicleCard} ${selected ? styles.vehicleCardSelected : ""}`}
+                  >
+                    {vehicle.imageUrl ? (
+                      <Image
+                        src={vehicle.imageUrl}
+                        alt={vehicle.name}
+                        className={styles.vehicleImage}
+                        width={640}
+                        height={360}
+                      />
+                    ) : (
+                      <div className={styles.vehicleImagePlaceholder}>No image</div>
+                    )}
+
+                    <div className={styles.vehicleBody}>
+                      <h4 className={styles.vehicleName}>{vehicle.name}</h4>
+                      <p className={styles.vehicleMeta}>
+                        {[vehicle.make, vehicle.model, vehicle.year]
+                          .filter(Boolean)
+                          .join(" • ") || "Premium class"}
+                      </p>
+
+                      <div className={styles.vehicleStats}>
+                        <span>
+                          <Users size={14} /> {vehicle.capacity}
+                        </span>
+                        <span>
+                          <Briefcase size={14} /> {luggage} bags
+                        </span>
+                        <span>
+                          <Clock3 size={14} /> {rideType === "HOURLY" ? `${hours}h` : (durationLabel || "ETA")}
+                        </span>
+                      </div>
+
+                      <div className={styles.priceBox}>
+                        <p className={styles.priceLabel}>Estimated total</p>
+                        <p className={styles.priceValue}>
+                          {estimated ? formatMoney(estimated.total) : "Not available"}
+                        </p>
+                        {estimated && (
+                          <p className={styles.priceHint}>{estimated.breakdown}</p>
+                        )}
+                      </div>
+
+                      <button
+                        className={styles.btnPrimary}
+                        type="button"
+                        onClick={() => setSelectedVehicleId(vehicle.id)}
+                      >
+                        {selected ? "Selected" : "Select Vehicle"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className={`${styles.stepCard} ${styles.summaryCardMobile}`}>
+              <h3 className={styles.stepTitle}>Booking Summary</h3>
+              <div className={styles.summaryRows}>
+                <p><strong>Pickup:</strong> {bookingSummary.pickup}</p>
+                <p><strong>Drop-off:</strong> {bookingSummary.dropoff}</p>
+                <p><strong>Date:</strong> {bookingSummary.date}</p>
+                <p><strong>Time:</strong> {bookingSummary.time}</p>
+                <p><strong>Passengers:</strong> {bookingSummary.passengers}</p>
+                <p><strong>Distance:</strong> {bookingSummary.distance}</p>
+                <p><strong>Duration:</strong> {bookingSummary.duration}</p>
+              </div>
+            </div>
+            <div className={styles.stepFooter + " " + styles.stepFooterBetween}>
+              <button className={styles.btnOutline} onClick={handlePrevious}>
+                Back to Trip Details
+              </button>
+              <button className={styles.btnPrimary} disabled={!selectedVehicleId}>
+                Continue to Passenger Details
+              </button>
+            </div>
+          </>
+        )}
       </div>
       <div className={styles.formSidebar}>
         <div className={styles.stickySidebar}>
           {step === 0 && <div className={styles.map} ref={mapRef} />}
+          {step === 1 && (
+            <div className={styles.stepCard}>
+              <h3 className={styles.stepTitle}>Booking Summary</h3>
+              <div className={styles.summaryRows}>
+                <p><strong>Pickup:</strong> {bookingSummary.pickup}</p>
+                <p><strong>Drop-off:</strong> {bookingSummary.dropoff}</p>
+                <p><strong>Date:</strong> {bookingSummary.date}</p>
+                <p><strong>Time:</strong> {bookingSummary.time}</p>
+                <p><strong>Passengers:</strong> {bookingSummary.passengers}</p>
+                <p><strong>Distance:</strong> {bookingSummary.distance}</p>
+                <p><strong>Duration:</strong> {bookingSummary.duration}</p>
+                <p><strong>Est. taxes & fees:</strong> {formatMoney(0)}</p>
+                <p className={styles.summaryTotal}>
+                  <strong>Total:</strong>{" "}
+                  {selectedVehicleId
+                    ? formatMoney(
+                        buildEstimatedPrice(
+                          vehicles.find((vehicle) => vehicle.id === selectedVehicleId)!,
+                          rideType,
+                          distanceMiles,
+                          Number(hours),
+                        )?.total ?? 0,
+                      )
+                    : formatMoney(0)}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
