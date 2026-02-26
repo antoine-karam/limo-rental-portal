@@ -71,7 +71,7 @@
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .inputWithIcon {
@@ -167,7 +167,7 @@
 .select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .select option {
@@ -207,7 +207,7 @@
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background-color: #b89320;
+  background-color: color-mix(in srgb, var(--color-primary) 86%, black);
 }
 
 .btnPrimary:disabled {
@@ -246,6 +246,9 @@
 .formMain {
   grid-column: span 1;
   order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 .formSidebar {
   grid-column: span 1;
@@ -282,6 +285,127 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   margin-bottom: 5rem;
+}
+
+.stepTitle {
+  font-size: 1.75rem;
+}
+
+.stepSubtitle {
+  margin-top: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.vehicleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.vehicleCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-card);
+}
+
+.vehicleCardSelected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.vehicleImage,
+.vehicleImagePlaceholder {
+  height: 220px;
+  width: 100%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-secondary);
+}
+
+.vehicleBody {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vehicleName {
+  font-size: 1.25rem;
+}
+
+.vehicleMeta {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.vehicleStats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.vehicleStats span {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.priceBox {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem 0;
+}
+
+.priceLabel {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.priceValue {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.priceHint {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+.summaryRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.5rem;
+}
+
+.summaryRows strong {
+  color: var(--color-text-primary);
+}
+
+.summaryTotal {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-primary) !important;
+  font-size: 1.1rem;
+}
+
+.summaryCardMobile {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .summaryCardMobile {
+    display: block;
+  }
 }
 @media (max-width: 767px) {
   .map {
