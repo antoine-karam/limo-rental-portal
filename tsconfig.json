@@ -30,6 +30,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "types": ["google.maps"],
+  "types": ["node", "google.maps"],
   "exclude": ["node_modules"]
 }
